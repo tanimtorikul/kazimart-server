@@ -28,10 +28,18 @@ async function run() {
     await client.connect();
 
     const productsCollection = client.db("kazimartDB").collection("products");
+    const cartsCollection = client.db("kazimartDB").collection("carts");
 
     // get all products
     app.get("/products", async (req, res) => {
       const result = await productsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // carts collection
+    app.post("/carts", async (req, res) => {
+      const cartItem = req.body;
+      const result = await cartsCollection.insertOne(cartItem);
       res.send(result);
     });
     // Send a ping to confirm a successful connection
