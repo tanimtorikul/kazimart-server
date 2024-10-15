@@ -49,6 +49,25 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersColletion.deleteOne(query);
+      res.send(result);
+    });
+
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId() };
+      const updatedDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await usersColletion.updatedDoc(filter, updatedDoc);
+      res.send(result);
+    });
+
     // get all products
     app.get("/products", async (req, res) => {
       const result = await productsCollection.find().toArray();
