@@ -32,17 +32,22 @@ async function run() {
     const usersColletion = client.db("kazimartDB").collection("users");
 
     // users related apis
-    app.post('/users', async(req, res) => {
+    app.post("/users", async (req, res) => {
       const user = req.body;
       // if user doesnt exist insert email in db
-      const query = {email: user.email}
-      const existingUser = await usersColletion.findOne(query)
+      const query = { email: user.email };
+      const existingUser = await usersColletion.findOne(query);
       if (existingUser) {
-        return res.send({message:'user already exists', insertedId: null})
+        return res.send({ message: "user already exists", insertedId: null });
       }
-      const result = await usersColletion.insertOne(user)
-      res.send(result)
-    })
+      const result = await usersColletion.insertOne(user);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const result = await usersColletion.find().toArray();
+      res.send(result);
+    });
 
     // get all products
     app.get("/products", async (req, res) => {
