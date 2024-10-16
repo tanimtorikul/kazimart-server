@@ -1,20 +1,18 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
+
+const app = express();
 const port = process.env.PORT || 5000;
 
-// middlewares
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-//
-
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.o2yungw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// MongoDB Connection
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.o2yungw.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -23,14 +21,13 @@ const client = new MongoClient(uri, {
   },
 });
 
+// Routes
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // collections
     const productsCollection = client.db("kazimartDB").collection("products");
-    const cartsCollection = client.db("kazimartDB").collection("carts");
     const usersCollection = client.db("kazimartDB").collection("users");
+    const cartsCollection = client.db("kazimartDB").collection("carts");
 
     // jwt related apis
     app.post("/jwt", async (req, res) => {
@@ -42,92 +39,115 @@ async function run() {
     });
     // middlewares
     const verifyToken = (req, res, next) => {
-      // console.log('inside verify token',req.headers);
+      console.log("inside verify token", req.headers.authorization);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "forbidden access" });
       }
       const token = req.headers.authorization.split(" ")[1];
-      
-      // next();
+
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: "forbidden access" });
+        }
+        req.decoded = decoded;
+        next();
+      });
     };
-    // users related apis
+
+    // api to get all users - protected route
+    app.get("/users", verifyToken, async (req, res) => {
+      const users = await usersCollection.find().toArray();
+      res.send(users);
+    });
+
+    // api to check admin
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: "unauthorized access" });
+      }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === "admin";
+      }
+      res.send({ admin });
+    });
+
+    // api to add a user and check is exist
     app.post("/users", async (req, res) => {
       const user = req.body;
-      // if user doesnt exist insert email in db
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
+
       if (existingUser) {
-        return res.send({ message: "user already exists", insertedId: null });
+        return res.send({ message: "User already exists" });
       }
+
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
 
-    app.get("/users", verifyToken, async (req, res) => {
-      const result = await usersCollection.find().toArray();
-      res.send(result);
-    });
-
-    app.delete("/users/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await usersCollection.deleteOne(query);
-      res.send(result);
-    });
-
+    // api to update user role to admin
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-      const updatedDoc = {
+      const updateDoc = {
         $set: {
           role: "admin",
         },
       };
-      const result = await usersCollection.updateOne(filter, updatedDoc);
+      const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
-    // get all products
+    // api to get all products
     app.get("/products", async (req, res) => {
-      const result = await productsCollection.find().toArray();
-      res.send(result);
+      const products = await productsCollection.find().toArray();
+      res.send(products);
     });
 
-    // carts collection
-    app.get("/carts", async (req, res) => {
+    // api to get cart items by user email
+    app.get("/carts", verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
-      const result = await usersCollection.find(query).toArray();
+      const result = await cartsCollection.find(query).toArray();
       res.send(result);
     });
-    app.post("/carts", async (req, res) => {
+
+    // api to add cart items
+    app.post("/carts", verifyToken, async (req, res) => {
       const cartItem = req.body;
       const result = await cartsCollection.insertOne(cartItem);
       res.send(result);
     });
 
-    app.delete("/carts/:id", async (req, res) => {
+    //api to delete cart item
+    app.delete("/carts/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await cartsCollection.deleteOne(query);
       res.send(result);
     });
-    // Send a ping to confirm a successful connection
+
+    // **Ping MongoDB**
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("Successfully connected to MongoDB.");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
 }
+
 run().catch(console.dir);
 
+// Root Route
 app.get("/", (req, res) => {
-  res.send("kazimart is running");
+  res.send("Kazimart server is running");
 });
 
+// Server Start
 app.listen(port, () => {
-  console.log(`Kazimart is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
