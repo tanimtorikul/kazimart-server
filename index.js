@@ -109,7 +109,7 @@ async function run() {
     });
 
     // api to get cart items by user email
-    app.get("/carts", verifyToken, async (req, res) => {
+    app.get("/carts", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const result = await cartsCollection.find(query).toArray();
@@ -117,14 +117,23 @@ async function run() {
     });
 
     // api to add cart items
-    app.post("/carts", verifyToken, async (req, res) => {
+    app.post("/carts", async (req, res) => {
       const cartItem = req.body;
       const result = await cartsCollection.insertOne(cartItem);
       res.send(result);
     });
 
+    // API to delete a user by ID
+    app.delete("/users/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+
+      res.send(result);
+    });
+
     //api to delete cart item
-    app.delete("/carts/:id", verifyToken, async (req, res) => {
+    app.delete("/carts/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await cartsCollection.deleteOne(query);
