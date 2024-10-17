@@ -24,10 +24,11 @@ const client = new MongoClient(uri, {
 // Routes
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const productsCollection = client.db("kazimartDB").collection("products");
     const usersCollection = client.db("kazimartDB").collection("users");
     const cartsCollection = client.db("kazimartDB").collection("carts");
+    const bannersCollection = client.db("kazimartDB").collection("mainbanners");
 
     // jwt related apis
     app.post("/jwt", async (req, res) => {
@@ -107,6 +108,17 @@ async function run() {
       const products = await productsCollection.find().toArray();
       res.send(products);
     });
+    // api to get all main banners
+    app.get("/main-banners", async (req, res) => {
+      const banners = await bannersCollection.find().toArray();
+      res.send(banners);
+    });
+    // api to post main banner
+    app.post("/main-banners", async (req, res) => {
+      const banner = req.body;
+      const result = await bannersCollection.insertOne(banner);
+      res.send(result);
+    });
 
     // api to get cart items by user email
     app.get("/carts", async (req, res) => {
@@ -140,9 +152,9 @@ async function run() {
       res.send(result);
     });
 
-    // **Ping MongoDB**
-    await client.db("admin").command({ ping: 1 });
-    console.log("Successfully connected to MongoDB.");
+    // // **Ping MongoDB**
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Successfully connected to MongoDB.");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
