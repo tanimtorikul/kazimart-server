@@ -120,6 +120,14 @@ async function run() {
       res.send(result);
     });
 
+    app.delete('/main-banners/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bannersCollection.deleteOne(query);
+
+      res.send(result);
+    })
+
     // api to get cart items by user email
     app.get("/carts", async (req, res) => {
       const email = req.query.email;
