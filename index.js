@@ -29,7 +29,9 @@ async function run() {
     const usersCollection = client.db("kazimartDB").collection("users");
     const cartsCollection = client.db("kazimartDB").collection("carts");
     const bannersCollection = client.db("kazimartDB").collection("mainbanners");
-    const categoriesCollection = client.db("kazimartDB").collection("categories");
+    const categoriesCollection = client
+      .db("kazimartDB")
+      .collection("categories");
 
     // jwt related apis
     app.post("/jwt", async (req, res) => {
@@ -108,6 +110,20 @@ async function run() {
       const categories = await categoriesCollection.find().toArray();
       res.send(categories);
     });
+    // api to post categories
+    app.post("/categories", async (req, res) => {
+      const category = req.body;
+      const result = await categoriesCollection.insertOne(category);
+      res.send(result);
+    });
+    // api to delete categories
+    app.delete("/categories/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await categoriesCollection.deleteOne(query);
+
+      res.send(result);
+    });
 
     // api to get all products
     app.get("/products", async (req, res) => {
@@ -126,13 +142,13 @@ async function run() {
       res.send(result);
     });
 
-    app.delete('/main-banners/:id', async(req, res) => {
+    app.delete("/main-banners/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bannersCollection.deleteOne(query);
 
       res.send(result);
-    })
+    });
 
     // api to get cart items by user email
     app.get("/carts", async (req, res) => {
