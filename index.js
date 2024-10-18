@@ -29,6 +29,7 @@ async function run() {
     const usersCollection = client.db("kazimartDB").collection("users");
     const cartsCollection = client.db("kazimartDB").collection("carts");
     const bannersCollection = client.db("kazimartDB").collection("mainbanners");
+    const categoriesCollection = client.db("kazimartDB").collection("categories");
 
     // jwt related apis
     app.post("/jwt", async (req, res) => {
@@ -101,6 +102,11 @@ async function run() {
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
+    });
+    // api to get all categories
+    app.get("/categories", async (req, res) => {
+      const categories = await categoriesCollection.find().toArray();
+      res.send(categories);
     });
 
     // api to get all products
