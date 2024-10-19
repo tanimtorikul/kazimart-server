@@ -130,6 +130,11 @@ async function run() {
       const products = await productsCollection.find().toArray();
       res.send(products);
     });
+    //pagination
+    app.get("/productsCount", async (req, res) => {
+      const count = await productsCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
     // api to post product
     app.post("/products", verifyToken, async (req, res) => {
       const product = req.body;
