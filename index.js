@@ -127,7 +127,15 @@ async function run() {
 
     // api to get all products
     app.get("/products", async (req, res) => {
-      const products = await productsCollection.find().toArray();
+      // console.log('pagination query',req.query);
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+
+      const products = await productsCollection
+        .find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(products);
     });
     //pagination
