@@ -130,6 +130,12 @@ async function run() {
       const products = await productsCollection.find().toArray();
       res.send(products);
     });
+    // api to post product
+    app.post("/products", verifyToken, async (req, res) => {
+      const product = req.body;
+      const result = await productsCollection.insertOne(product);
+      res.send(result);
+    });
     // api to get all main banners
     app.get("/main-banners", async (req, res) => {
       const banners = await bannersCollection.find().toArray();
