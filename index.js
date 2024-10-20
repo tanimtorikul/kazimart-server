@@ -130,14 +130,22 @@ async function run() {
       // console.log('pagination query',req.query);
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
+      const filter = req.query;
+      const query = {};
+      const options = {
+        sort: {
+          price: filter.sort === "asc" ? 1 : -1,
+        },
+      };
 
       const products = await productsCollection
-        .find()
+        .find(query, options)
         .skip(page * size)
         .limit(size)
         .toArray();
       res.send(products);
     });
+
     //pagination
     app.get("/productsCount", async (req, res) => {
       const count = await productsCollection.estimatedDocumentCount();
