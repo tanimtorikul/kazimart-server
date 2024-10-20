@@ -131,7 +131,13 @@ async function run() {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
       const filter = req.query;
-      const query = {};
+      const query = {
+        $or: [
+          { name: { $regex: filter.search, $options: 'i' } },
+          { description: { $regex: filter.search, $options: 'i' } }
+        ]
+      };
+      
       const options = {
         sort: {
           price: filter.sort === "asc" ? 1 : -1,
@@ -144,6 +150,16 @@ async function run() {
         .limit(size)
         .toArray();
       res.send(products);
+    });
+// by id
+    app.get("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const product = await productsCollection.findOne({ _id: new ObjectId(id) });
+      if (product) {
+        res.json(product);
+      } else {
+        res.status(404).send("Product not found");
+      }
     });
 
     //pagination
