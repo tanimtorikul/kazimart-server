@@ -124,8 +124,13 @@ async function run() {
 
       res.send(result);
     });
+      // api to get all products
+      app.get("/products", async (req, res) => {
+        const products = await productsCollection.find().toArray();
+        res.send(products);
+      });
 
-    // api to get all products
+    // api to get products based on params
     app.get("/products", async (req, res) => {
       // console.log('pagination query',req.query);
       const page = parseInt(req.query.page);
@@ -176,7 +181,7 @@ async function run() {
       res.send(result);
     });
     // api to delete product
-    app.delete("/product/:id", async (req, res) => {
+    app.delete("/products/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await productsCollection.deleteOne(query);
