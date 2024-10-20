@@ -133,11 +133,11 @@ async function run() {
       const filter = req.query;
       const query = {
         $or: [
-          { name: { $regex: filter.search, $options: 'i' } },
-          { description: { $regex: filter.search, $options: 'i' } }
-        ]
+          { name: { $regex: filter.search, $options: "i" } },
+          { description: { $regex: filter.search, $options: "i" } },
+        ],
       };
-      
+
       const options = {
         sort: {
           price: filter.sort === "asc" ? 1 : -1,
@@ -151,10 +151,12 @@ async function run() {
         .toArray();
       res.send(products);
     });
-// by id
+    // by id
     app.get("/products/:id", async (req, res) => {
       const id = req.params.id;
-      const product = await productsCollection.findOne({ _id: new ObjectId(id) });
+      const product = await productsCollection.findOne({
+        _id: new ObjectId(id),
+      });
       if (product) {
         res.json(product);
       } else {
@@ -171,6 +173,13 @@ async function run() {
     app.post("/products", verifyToken, async (req, res) => {
       const product = req.body;
       const result = await productsCollection.insertOne(product);
+      res.send(result);
+    });
+    // api to delete product
+    app.delete("/product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productsCollection.deleteOne(query);
       res.send(result);
     });
     // api to get all main banners
