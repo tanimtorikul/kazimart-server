@@ -253,11 +253,17 @@ async function run() {
     });
 
     // api to post orders
-    app.post('/orders', async(req, res) => {
+    app.post("/orders", async (req, res) => {
       const orderItem = req.body;
-      const result = await ordersCollection.insertOne(orderItem)
-      res.send(result)
-    })
+      const result = await ordersCollection.insertOne(orderItem);
+      res.send(result);
+    });
+    
+    // api to get orders
+    app.get("/orders", verifyToken, async (req, res) => {
+      const orders = await ordersCollection.find().toArray();
+      res.send(orders);
+    });
 
     // // **Ping MongoDB**
     // await client.db("admin").command({ ping: 1 });
