@@ -124,11 +124,11 @@ async function run() {
 
       res.send(result);
     });
-      // api to get all products
-      app.get("/products", async (req, res) => {
-        const products = await productsCollection.find().toArray();
-        res.send(products);
-      });
+    // api to get all products
+    app.get("/products/all", async (req, res) => {
+      const products = await productsCollection.find().toArray();
+      res.send(products);
+    });
 
     // api to get products based on params
     app.get("/products", async (req, res) => {
@@ -219,6 +219,18 @@ async function run() {
     app.post("/carts", async (req, res) => {
       const cartItem = req.body;
       const result = await cartsCollection.insertOne(cartItem);
+      res.send(result);
+    });
+
+    // API to update cart items
+    app.patch("/carts/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+      const result = await cartsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData }
+      );
+
       res.send(result);
     });
 
