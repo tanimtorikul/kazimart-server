@@ -32,6 +32,7 @@ async function run() {
     const categoriesCollection = client
       .db("kazimartDB")
       .collection("categories");
+    const ordersCollection = client.db("kazimartDB").collection("orders");
 
     // jwt related apis
     app.post("/jwt", async (req, res) => {
@@ -250,6 +251,13 @@ async function run() {
       const result = await cartsCollection.deleteOne(query);
       res.send(result);
     });
+
+    // api to post orders
+    app.post('/orders', async(req, res) => {
+      const orderItem = req.body;
+      const result = await ordersCollection.insertOne(orderItem)
+      res.send(result)
+    })
 
     // // **Ping MongoDB**
     // await client.db("admin").command({ ping: 1 });
