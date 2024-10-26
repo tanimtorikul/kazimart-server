@@ -181,31 +181,31 @@ async function run() {
       const result = await productsCollection.insertOne(product);
       res.send(result);
     });
-
+    // api to update category
     app.put("/categories/:id", verifyToken, async (req, res) => {
       try {
         const { id } = req.params;
         const updatedCategory = req.body;
-    
+
         const result = await categoriesCollection.updateOne(
           { _id: new ObjectId(id) },
           { $set: updatedCategory }
         );
-    
+
         if (result.matchedCount === 0) {
           return res.status(404).send({ message: "Category not found" });
         }
         if (result.modifiedCount === 0) {
           return res.status(400).send({ message: "No changes detected" });
         }
-    
+
         res.send(result);
       } catch (error) {
         console.error("Error updating category:", error);
         res.status(500).send({ error: "Failed to update category" });
       }
     });
-    
+
     // api to delete product
     app.delete("/products/:id", async (req, res) => {
       const id = req.params.id;
@@ -288,6 +288,18 @@ async function run() {
     app.get("/orders", verifyToken, async (req, res) => {
       const orders = await ordersCollection.find().toArray();
       res.send(orders);
+    });
+    // api  to update order status
+    app.patch('/orders/:id', async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+    
+      const result = await ordersCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData }
+      );
+    
+      res.send(result);
     });
 
     // // **Ping MongoDB**
