@@ -183,29 +183,28 @@ async function run() {
     });
     // api to update category
     app.put("/categories/:id", verifyToken, async (req, res) => {
-      try {
-        const { id } = req.params;
-        const updatedCategory = req.body;
+      const { id } = req.params;
+      const updatedCategory = req.body;
 
-        const result = await categoriesCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: updatedCategory }
-        );
+      const result = await categoriesCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedCategory }
+      );
 
-        if (result.matchedCount === 0) {
-          return res.status(404).send({ message: "Category not found" });
-        }
-        if (result.modifiedCount === 0) {
-          return res.status(400).send({ message: "No changes detected" });
-        }
-
-        res.send(result);
-      } catch (error) {
-        console.error("Error updating category:", error);
-        res.status(500).send({ error: "Failed to update category" });
-      }
+      res.send(result);
     });
-
+    // api to update product
+    app.put("/products/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const productData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: productData,
+      };
+      const result = await productsCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    
     // api to delete product
     app.delete("/products/:id", async (req, res) => {
       const id = req.params.id;
@@ -289,16 +288,24 @@ async function run() {
       const orders = await ordersCollection.find().toArray();
       res.send(orders);
     });
+    // api to get orders by user email
+    app.get("/orders/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await ordersCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // api  to update order status
-    app.patch('/orders/:id', async (req, res) => {
+    app.patch("/orders/:id", async (req, res) => {
       const id = req.params.id;
       const updateData = req.body;
-    
+
       const result = await ordersCollection.updateOne(
         { _id: new ObjectId(id) },
         { $set: updateData }
       );
-    
+
       res.send(result);
     });
 
