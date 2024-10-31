@@ -29,10 +29,12 @@ async function run() {
     const usersCollection = client.db("kazimartDB").collection("users");
     const cartsCollection = client.db("kazimartDB").collection("carts");
     const bannersCollection = client.db("kazimartDB").collection("mainbanners");
+    const promoCollection = client.db("kazimartDB").collection("promo");
     const categoriesCollection = client
       .db("kazimartDB")
       .collection("categories");
     const ordersCollection = client.db("kazimartDB").collection("orders");
+    const blogsCollection = client.db("kazimartDB").collection("blogs");
 
     // jwt related apis
     app.post("/jwt", async (req, res) => {
@@ -181,6 +183,7 @@ async function run() {
       const result = await productsCollection.insertOne(product);
       res.send(result);
     });
+
     // api to update category
     app.put("/categories/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
@@ -204,7 +207,7 @@ async function run() {
       const result = await productsCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    
+
     // api to delete product
     app.delete("/products/:id", async (req, res) => {
       const id = req.params.id;
@@ -230,6 +233,11 @@ async function run() {
       const result = await bannersCollection.deleteOne(query);
 
       res.send(result);
+    });
+    // api to get all promo banners
+    app.get("/promo", async (req, res) => {
+      const promo = await promoCollection.find().toArray();
+      res.send(promo);
     });
 
     // api to get cart items by user email
@@ -275,21 +283,53 @@ async function run() {
       const result = await cartsCollection.deleteOne(query);
       res.send(result);
     });
+    app.delete("/carts", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await cartsCollection.deleteMany(query);
+      res.send(result);
+    });
 
     // api to post orders
-    app.post("/orders", async (req, res) => {
+    app.post("/allorders", async (req, res) => {
       const orderItem = req.body;
       const result = await ordersCollection.insertOne(orderItem);
       res.send(result);
     });
 
     // api to get orders
-    app.get("/orders", verifyToken, async (req, res) => {
+    app.get("/allorders", verifyToken, async (req, res) => {
       const orders = await ordersCollection.find().toArray();
       res.send(orders);
     });
+    // api to get orders based on search , filter, and pagination
+    app.get("/orders", async (req, res) => {
+      // console.log('pagination query',req.query);
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      const filter = req.query;
+      const query = {
+        $or: [
+          { name: { $regex: filter.search, $options: "i" } },
+          { _id: { $regex: filter.search, $options: "i" } },
+        ],
+      };
+
+      const orders = await ordersCollection
+        .find(query)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(orders);
+    });
+
+    //pagination
+    app.get("/ordersCount", async (req, res) => {
+      const count = await ordersCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
     // api to get orders by user email
-    app.get("/orders/:email", async (req, res) => {
+    app.get("/allorders/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await ordersCollection.find(query).toArray();
@@ -297,7 +337,7 @@ async function run() {
     });
 
     // api  to update order status
-    app.patch("/orders/:id", async (req, res) => {
+    app.patch("/allorders/:id", async (req, res) => {
       const id = req.params.id;
       const updateData = req.body;
 
@@ -307,6 +347,17 @@ async function run() {
       );
 
       res.send(result);
+    });
+    // api to add blogs
+    app.post("/add-blogs", async (req, res) => {
+      const blog = req.body;
+      const result = await blogsCollection.insertOne(blog);
+      res.send(result);
+    });
+    // api to get blogs
+    app.get("/get-blogs", async (req, res) => {
+      const blog = await blogsCollection.find().toArray();
+      res.send(blog);
     });
 
     // // **Ping MongoDB**
